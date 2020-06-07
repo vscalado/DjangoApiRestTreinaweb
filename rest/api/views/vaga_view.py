@@ -1,17 +1,22 @@
 from rest_framework import status
+from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..services import vaga_service
 from ..serializers import vaga_serializer
 from ..entidades import vaga
+from ..pagination import PaginacaoCustomizada
 
 
 class VagaList(APIView):
     def get(self, request, format=None):
+        paginacao = PaginacaoCustomizada()
         vagas = vaga_service.listar_vagas()
-        serializer = vaga_serializer.VagaSerializer(vagas, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        resultado = paginacao.paginate_queryset(vagas, request)
+        serializer = vaga_serializer.VagaSerializer(resultado, many=True)
+        return paginacao.get_paginated_response(serializer.data)
+        #return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         serializer = vaga_serializer.VagaSerializer(data=request.data)
